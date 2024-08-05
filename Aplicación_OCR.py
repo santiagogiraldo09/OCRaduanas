@@ -140,7 +140,8 @@ def main():
     st.set_page_config(layout="centered")
     col1, col2 = st.columns([2, 1.5])
     col1.title("Analizador de Documentos")
-    image = Image.open(r"C:\Users\Lenovo Thinkpad E14\Downloads\LOGOTIPO IAC-02 1.png")  # Reemplaza con la ruta de tu imagen
+    image_path = os.path.join(os.path.dirname(__file__), 'LOGOTIPO IAC-02 1.png')  # Usar ruta relativa
+    image = Image.open(image_path)
     col2.image(image, width=300)
 
     st.write("Carga documentos de Facturas, RUT y Cámara de Comercio para ser analizados.")
