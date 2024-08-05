@@ -1,0 +1,7 @@
+streamlit
+pandas
+openpyxl
+azure-core
+azure-ai-formrecognizer
+Pillow
+requests
