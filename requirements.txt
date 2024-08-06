@@ -5,3 +5,4 @@ azure-core
 azure-ai-formrecognizer
 Pillow
 requests
+python-dotenv
