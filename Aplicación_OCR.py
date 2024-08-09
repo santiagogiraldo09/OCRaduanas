@@ -154,7 +154,7 @@ def main():
     if st.button("Analizar documentos"):
         all_results = []
         all_normalized_addresses = []
-        direccion_factura = ""
+        direccion_rut = ""
         with st.spinner("Analizando..."):
             for uploaded_file, doc_type in [(rut_file, "RUT"), (cc_file, "Cámara de Comercio"), (cotizacion_file, "Cotización")]:
                 if uploaded_file is not None:
@@ -210,7 +210,7 @@ def main():
         st.download_button(label="Descargar Excel", data=excel_data, file_name="documentos_combinados.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         # Guardar la dirección en session_state para categorizar después
-        st.session_state.direccion_factura = direccion_factura
+        st.session_state.direccion_rut = direccion_rut
 
     if "direccion_rut" in st.session_state:
         st.title("Categorización de Dirección")
