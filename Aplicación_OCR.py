@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-import os
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from io import BytesIO
@@ -75,17 +74,22 @@ def categorizar_zona(latitud, longitud):
 
     if lugares_residenciales:
         return "Zona residencial"
+    elif lugares_portuarios:
+        return "Zona portuaria"
     elif lugares_bodegas:
         return "Zona de bodegas"
-    elif lugares_portuarios:
-         return "Zona portuaria"
     else:
         return "Zona desconocida"
 
 # Función para analizar el documento
 def analyze_document(file_path):
     document_analysis_client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
-	@@ -22,13 +94,27 @@ def analyze_document(file_path):
+    with open(file_path, "rb") as f:
+        poller = document_analysis_client.begin_analyze_document("prebuilt-invoice", f)
+        result = poller.result()
+
+    document_data = {}
+    for field_name, field in result.documents[0].fields.items():
         document_data[field_name] = field.value if field else "0"
     return document_data
 
@@ -103,7 +107,7 @@ def extract_full_address(address_value):
         state = address_value.state if address_value.state else ""
     else:
         return "No address found"
-
+    
     address_parts = [f"{road} {house_number}".strip()]
     if city:
         address_parts.append(city)
@@ -113,18 +117,25 @@ def extract_full_address(address_value):
 
 # Función para normalizar la dirección
 def normalize_address(address):
-	@@ -42,62 +128,70 @@ def normalize_address(address):
+    address = re.sub(r'\b[Cc][Rr]+\b', 'Carrera', address)
+    address = re.sub(r'\b[Cc][Ll][Ll]?\b', 'Calle', address)
+    address = re.sub(r'\b[Aa][Vv][Ee]?\b', 'Avenida', address)
+    address = re.sub(r'\b[Dd][Gg][Ii][Aa][Gg]?[Oo]?[Nn]?[Aa]?[Ll]?\b', 'Diagonal', address)
+    address = re.sub(r'\b[Ii][Nn][Tt]?[Ee]?[Rr]?[Ii]?[Oo]?[Rr]?\b', 'Interior', address)
+    address = re.sub(r'[^a-zA-Z0-9\s#]', '', address)
+    address = re.sub(r'\s+', ' ', address).strip()
     return address
 
 # Función para guardar los resultados
-def save_results(results, file_name="historico_documentos.xlsx"):
+def save_results(results):
     df = pd.DataFrame(results)
-    if os.path.exists(file_name):
-        existing_df = pd.read_excel(file_name)
-        df = pd.concat([existing_df, df], ignore_index=True)
-    with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Documentos')
+    output.seek(0)
+    return output
 
+# Función principal
 def main():
     st.set_page_config(layout="centered")
     col1, col2 = st.columns([2, 1.5])
@@ -184,15 +195,13 @@ def main():
         st.write(df_results)
 
         # Verificar similitud de direcciones normalizadas
-	@@ -107,8 +201,31 @@ def main():
+        if len(set(all_normalized_addresses)) == 1:
+            st.success("Las direcciones son similares.")
+        else:
             st.warning("Las direcciones no coinciden.")
 
         # Guardar y permitir descarga
-        save_results(all_results)
-        excel_data = BytesIO()
-        with pd.ExcelWriter(excel_data, engine='openpyxl') as writer:
-            df_results.to_excel(writer, index=False, sheet_name='Documentos')
-        excel_data.seek(0)
+        excel_data = save_results(all_results)
         st.download_button(label="Descargar Excel", data=excel_data, file_name="documentos_combinados.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         # Guardar la dirección en session_state para categorizar después
@@ -216,4 +225,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
