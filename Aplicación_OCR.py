@@ -154,9 +154,9 @@ def main():
     if st.button("Analizar documentos"):
         all_results = []
         all_normalized_addresses = []
-        direccion_factura = ""
+        direccion_rut = ""
         with st.spinner("Analizando..."):
-            for uploaded_file, doc_type in [(rut_file, "RUT"), (cc_file, "Cámara de Comercio"), (cotizacion_file, "Factura")]:
+            for uploaded_file, doc_type in [(rut_file, "RUT"), (cc_file, "Cámara de Comercio"), (cotizacion_file, "Cotizacion")]:
                 if uploaded_file is not None:
                     file_path = f"temp_{uploaded_file.name}"
                     with open(file_path, "wb") as f:
@@ -170,7 +170,7 @@ def main():
                             address_value = data.get("CustomerAddress", "No encontrado")
                             street_address = extract_full_address(address_value)
                             if doc_type == "Factura":
-                                direccion_factura = street_address  # Guardar la dirección de la factura para editar
+                                direccion_rut = street_address  # Guardar la dirección de la factura para editar
 
                         normalized_address = normalize_address(street_address)
                         formatted_data = {
@@ -210,11 +210,11 @@ def main():
         st.download_button(label="Descargar Excel", data=excel_data, file_name="documentos_combinados.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         # Guardar la dirección en session_state para categorizar después
-        st.session_state.direccion_factura = direccion_factura
+        st.session_state.direccion_rut = direccion_rut
 
-    if "direccion_factura" in st.session_state:
+    if "direccion_rut" in st.session_state:
         st.title("Categorización de Dirección")
-        direccion_editada = st.text_input("Edita la dirección para categorizar", value=st.session_state.direccion_factura)
+        direccion_editada = st.text_input("Edita la dirección para categorizar", value=st.session_state.direccion_rut)
 
         if st.button("Confirmar y Categorizar"):
             if direccion_editada:
