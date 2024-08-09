@@ -5,15 +5,15 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from io import BytesIO
 from PIL import Image
+import load_dotenv
 import requests
 import os
 
-# Configuración de Azure Form Recognizer
-endpoint = "https://demoocr.cognitiveservices.azure.com/"
-key = "125c4bac6511481290029459b6cf96c2"
-
-# Clave de API de Google Maps
-API_KEY = 'AIzaSyAup1kQpy0W1gyaWOY2IoUl9VAHP_7pxYI'
+#Carga de variables del entorno
+load_dotenv()
+endpoint = os.getenv("AZURE_ENDPOINT")
+key = os.getenv("AZURE_KEY")
+API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # URL de la API de Geocoding
 GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
