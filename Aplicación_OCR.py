@@ -6,6 +6,7 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from io import BytesIO
 from PIL import Image
 import requests
+import os
 
 # Configuración de Azure Form Recognizer
 endpoint = "https://demoocr.cognitiveservices.azure.com/"
@@ -127,20 +128,20 @@ def normalize_address(address):
     return address
 
 # Función para guardar los resultados
-def save_results(results):
+def save_results(results, file_name="historico_documentos.xlsx"):
     df = pd.DataFrame(results)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+    if os.path.exists(file_name):
+        existing_df = pd.read_excel(file_name)
+        df = pd.concat([existing_df, df], ignore_index=True)
+    with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Documentos')
-    output.seek(0)
-    return output
 
-# Función principal
 def main():
     st.set_page_config(layout="centered")
     col1, col2 = st.columns([2, 1.5])
     col1.title("Analizador de Documentos")
-    image = Image.open(r"C:\Users\Lenovo Thinkpad E14\Downloads\LOGOTIPO IAC-02 1.png")  # Reemplaza con la ruta de tu imagen
+    image_path = os.path.join(os.path.dirname(__file__), 'LOGOTIPO IAC-02 1.png')  # Usar ruta relativa
+    image = Image.open(image_path)
     col2.image(image, width=300)
 
     st.write("Carga documentos de Facturas, RUT y Cámara de Comercio para ser analizados.")
@@ -201,7 +202,11 @@ def main():
             st.warning("Las direcciones no coinciden.")
 
         # Guardar y permitir descarga
-        excel_data = save_results(all_results)
+        save_results(all_results)
+        excel_data = BytesIO()
+        with pd.ExcelWriter(excel_data, engine='openpyxl') as writer:
+            df_results.to_excel(writer, index=False, sheet_name='Documentos')
+        excel_data.seek(0)
         st.download_button(label="Descargar Excel", data=excel_data, file_name="documentos_combinados.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         # Guardar la dirección en session_state para categorizar después
@@ -225,5 +230,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
