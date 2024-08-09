@@ -13,7 +13,7 @@ endpoint = "https://demoocr.cognitiveservices.azure.com/"
 key = "125c4bac6511481290029459b6cf96c2"
 
 # Clave de API de Google Maps
-API_KEY = 'AIzaSyAup1kQpy0W1gyaWOY2IoUl9VAHP_7pxYI'
+API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'
 
 # URL de la API de Geocoding
 GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
@@ -154,7 +154,7 @@ def main():
     if st.button("Analizar documentos"):
         all_results = []
         all_normalized_addresses = []
-        direccion_factura = ""
+        direccion_rut = ""  # Cambiado para usar dirección del RUT
         with st.spinner("Analizando..."):
             for uploaded_file, doc_type in [(rut_file, "RUT"), (cc_file, "Cámara de Comercio"), (factura_file, "Factura")]:
                 if uploaded_file is not None:
@@ -169,8 +169,8 @@ def main():
                             data = analyze_document(file_path)
                             address_value = data.get("CustomerAddress", "No encontrado")
                             street_address = extract_full_address(address_value)
-                            if doc_type == "Factura":
-                                direccion_factura = street_address  # Guardar la dirección de la factura para editar
+                            if doc_type == "RUT":
+                                direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
                         normalized_address = normalize_address(street_address)
                         formatted_data = {
@@ -210,11 +210,11 @@ def main():
         st.download_button(label="Descargar Excel", data=excel_data, file_name="documentos_combinados.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
         # Guardar la dirección en session_state para categorizar después
-        st.session_state.direccion_factura = direccion_factura
+        st.session_state.direccion_rut = direccion_rut  # Usar dirección del RUT
 
-    if "direccion_factura" in st.session_state:
+    if "direccion_rut" in st.session_state:
         st.title("Categorización de Dirección")
-        direccion_editada = st.text_input("Edita la dirección para categorizar", value=st.session_state.direccion_factura)
+        direccion_editada = st.text_input("Edita la dirección para categorizar", value=st.session_state.direccion_rut)
 
         if st.button("Confirmar y Categorizar"):
             if direccion_editada:
