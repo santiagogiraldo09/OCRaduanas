@@ -169,8 +169,8 @@ def main():
                             data = analyze_document(file_path)
                             address_value = data.get("CustomerAddress", "No encontrado")
                             street_address = extract_full_address(address_value)
-                            if doc_type == "Factura":
-                                direccion_rut = street_address  # Guardar la dirección de la factura para editar
+                            if doc_type == "RUT":
+                                direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
                         normalized_address = normalize_address(street_address)
                         formatted_data = {
