@@ -76,9 +76,9 @@ def categorizar_zona(latitud, longitud):
     if lugares_residenciales:
         return "Zona residencial"
     elif lugares_portuarios:
-        return "Zona portuaria"
-    elif lugares_bodegas:
         return "Zona de bodegas"
+    elif lugares_bodegas:
+        return "Zona portuaria"
     else:
         return "Zona desconocida"
 
