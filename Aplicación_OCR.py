@@ -164,7 +164,7 @@ def main():
 
                     try:
                         if doc_type == "Cámara de Comercio":
-                            street_address = "Carrera 63 B 32 E 25 OFICINA 206"
+                            street_address = "Carrera 63 B 32 E 25, Medellín, Antioquia"
                         else:
                             data = analyze_document(file_path)
                             address_value = data.get("CustomerAddress", "No encontrado")
