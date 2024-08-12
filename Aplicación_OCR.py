@@ -68,7 +68,7 @@ def categorizar_zona(latitud, longitud):
         "portuaria": "point_of_interest|establishment",
         "bodegas": "storage"
     }
-    radio_busqueda = 200  # Radio en metros
+    radio_busqueda = 201  # Radio en metros
     lugares_residenciales = obtener_lugares_cercanos(latitud, longitud, tipos['residencial'], radio_busqueda)
     lugares_portuarios = obtener_lugares_cercanos(latitud, longitud, tipos['portuaria'], radio_busqueda)
     lugares_bodegas = obtener_lugares_cercanos(latitud, longitud, tipos['bodegas'], radio_busqueda)
