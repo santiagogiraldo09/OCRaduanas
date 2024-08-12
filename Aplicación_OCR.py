@@ -129,16 +129,20 @@ def extract_full_address(address_value):
         address_parts.append(state)
     return ", ".join(address_parts)
 
-# Función para normalizar la dirección
-def normalize_address(address):
-    address = re.sub(r'\b[Cc][Rr]+\b', 'Carrera', address)
-    address = re.sub(r'\b[Cc][Ll][Ll]?\b', 'Calle', address)
-    address = re.sub(r'\b[Aa][Vv][Ee]?\b', 'Avenida', address)
-    address = re.sub(r'\b[Dd][Gg][Ii][Aa][Gg]?[Oo]?[Nn]?[Aa]?[Ll]?\b', 'Diagonal', address)
-    address = re.sub(r'\b[Ii][Nn][Tt]?[Ee]?[Rr]?[Ii]?[Oo]?[Rr]?\b', 'Interior', address)
-    address = re.sub(r'[^a-zA-Z0-9\s#]', '', address)
-    address = re.sub(r'\s+', ' ', address).strip()
+# Función para normalizar la dirección y preparar para comparación base
+def normalize_address_for_comparison(address):
+    # Normalizar eliminando detalles específicos como "OFICINA" y números adicionales
+    address = re.sub(r'\bOFICINA\b\s*\d*', '', address, flags=re.IGNORECASE)
+    address = re.sub(r'\bAPT\b\s*\d*', '', address, flags=re.IGNORECASE)  # Eliminar detalles de apartamento
+    address = re.sub(r'\s+', ' ', address).strip()  # Eliminar espacios extra y normalizar
+    address = address.lower()  # Convertir a minúsculas para comparación uniforme
     return address
+
+# Función para comparar direcciones base
+def compare_addresses(address1, address2):
+    normalized_address1 = normalize_address_for_comparison(address1)
+    normalized_address2 = normalize_address_for_comparison(address2)
+    return normalized_address1 == normalized_address2
 
 # Función para guardar los resultados
 def save_results(results, file_name="historico_documentos.xlsx"):
@@ -185,7 +189,7 @@ def main():
                             if doc_type == "RUT":
                                 direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
-                        normalized_address = normalize_address(street_address)
+                        normalized_address = normalize_address_for_comparison(street_address)
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
@@ -208,11 +212,11 @@ def main():
         df_results = pd.DataFrame(all_results)
         st.write(df_results)
 
-        # Verificar similitud de direcciones normalizadas
+        # Verificar similitud de direcciones normalizadas (solo base)
         if len(set(all_normalized_addresses)) == 1:
-            st.success("Las direcciones son similares.")
+            st.success("Las direcciones base son similares.")
         else:
-            st.warning("Las direcciones no coinciden.")
+            st.warning("Las direcciones base no coinciden.")
 
         # Guardar y permitir descarga
         save_results(all_results)
@@ -243,5 +247,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
