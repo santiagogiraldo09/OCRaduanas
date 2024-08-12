@@ -69,7 +69,7 @@ def categorizar_zona(latitud, longitud):
         "portuaria": "point_of_interest|establishment",
         "bodegas": "storage"
     }
-    radio_busqueda = 201  # Radio en metros
+    radio_busqueda = 200  # Radio en metros
     lugares_residenciales = obtener_lugares_cercanos(latitud, longitud, tipos['residencial'], radio_busqueda)
     lugares_portuarios = obtener_lugares_cercanos(latitud, longitud, tipos['portuaria'], radio_busqueda)
     lugares_bodegas = obtener_lugares_cercanos(latitud, longitud, tipos['bodegas'], radio_busqueda)
@@ -150,7 +150,7 @@ def clean_and_normalize_address(address):
     return address
 
 # Función para comparar coordenadas con un umbral de distancia
-def comparar_coordenadas(coord1, coord2, umbral_metros=100):
+def comparar_coordenadas(coord1, coord2, umbral_metros=500):
     if None in coord1 or None in coord2:
         return False
     distancia = geodesic(coord1, coord2).meters
@@ -234,6 +234,7 @@ def main():
 
         # Verificar similitud de coordenadas base comparando cada par de direcciones
         if len(coordenadas_base) > 1:
+            umbral_metros = 200
             iguales = all(comparar_coordenadas(coordenadas_base[0], coord) for coord in coordenadas_base[1:])
             if iguales:
                 st.success("Las direcciones base son similares.")
