@@ -6,3 +6,4 @@ azure-ai-formrecognizer
 Pillow
 requests
 python-dotenv
+geopy
