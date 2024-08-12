@@ -206,16 +206,14 @@ def main():
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
                             "Customer Name": data.get("CustomerName", "No encontrado") if 'data' in locals() else "No encontrado",
-                            "Dirección": normalized_address,
-                            "Depuración": base_address  # Añadimos la dirección depurada para compararla
+                            "Dirección": normalized_address
                         }
                     except Exception as e:
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": "No encontrado",
                             "Customer Name": "No encontrado",
-                            "Dirección": "Error normalizando dirección",
-                            "Depuración": "Error depurando dirección"
+                            "Dirección": "Error normalizando dirección"
                         }
                         st.error(f"Error procesando el archivo {uploaded_file.name}: {e}")
 
