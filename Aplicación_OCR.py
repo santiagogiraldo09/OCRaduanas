@@ -129,30 +129,30 @@ def extract_full_address(address_value):
         address_parts.append(state)
     return ", ".join(address_parts)
 
-# Función para eliminar palabras clave no deseadas y normalizar la dirección
-def clean_and_normalize_address(address):
-    # Paso 1: Eliminar palabras clave no deseadas
-    address = re.sub(r'\b(OFICINA|APT|APARTAMENTO|PISO|DEPTO|INTERIOR)\b\s*\d*', '', address, flags=re.IGNORECASE)
-    
-    # Paso 2: Normalizar la dirección
-    # Convertir diferentes abreviaciones de "Carrera" a "Carrera"
-    address = re.sub(r'\b(CRA|CRR|CR|CARR)\b', 'Carrera', address, flags=re.IGNORECASE)
-    # Convertir diferentes abreviaciones de "Calle" a "Calle"
-    address = re.sub(r'\b(CLL|CLL|CALLE)\b', 'Calle', address, flags=re.IGNORECASE)
-    
-    # Convertir todo a minúsculas para comparación uniforme
-    address = address.lower()
-    
-    # Eliminar espacios extra
+# Función para normalizar la dirección
+def normalize_address(address):
+    address = re.sub(r'\b[Cc][Rr]+\b', 'Carrera', address)
+    address = re.sub(r'\b[Cc][Ll][Ll]?\b', 'Calle', address)
+    address = re.sub(r'\b[Aa][Vv][Ee]?\b', 'Avenida', address)
+    address = re.sub(r'\b[Dd][Gg][Ii][Aa][Gg]?[Oo]?[Nn]?[Aa]?[Ll]?\b', 'Diagonal', address)
+    address = re.sub(r'\b[Ii][Nn][Tt]?[Ee]?[Rr]?[Ii]?[Oo]?[Rr]?\b', 'Interior', address)
+    address = re.sub(r'[^a-zA-Z0-9\s#]', '', address)
     address = re.sub(r'\s+', ' ', address).strip()
+    return address
 
+# Función para extraer y normalizar la dirección base para comparación
+def normalize_address_for_comparison(address):
+    # Eliminar palabras clave como "OFICINA", "APT", etc., que puedan interferir con la comparación
+    address = re.sub(r'\b(OFICINA|APT|APARTAMENTO|PISO|DEPTO|INTERIOR)\b\s*\d*', '', address, flags=re.IGNORECASE)
+    address = re.sub(r'\s+', ' ', address).strip()  # Eliminar espacios extra y normalizar
+    address = address.lower()  # Convertir a minúsculas para comparación uniforme
     return address
 
 # Función para comparar direcciones base
 def compare_addresses(address1, address2):
-    cleaned_address1 = clean_and_normalize_address(address1)
-    cleaned_address2 = clean_and_normalize_address(address2)
-    return cleaned_address1 == cleaned_address2
+    normalized_address1 = normalize_address_for_comparison(address1)
+    normalized_address2 = normalize_address_for_comparison(address2)
+    return normalized_address1 == normalized_address2
 
 # Función para guardar los resultados
 def save_results(results, file_name="historico_documentos.xlsx"):
@@ -200,22 +200,20 @@ def main():
                                 direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
                         normalized_address = normalize_address(street_address)
-                        base_address = clean_and_normalize_address(street_address)
+                        base_address = normalize_address_for_comparison(street_address)
 
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
                             "Customer Name": data.get("CustomerName", "No encontrado") if 'data' in locals() else "No encontrado",
-                            "Dirección": normalized_address,
-                            "Depuración": base_address  # Añadimos la dirección depurada para compararla
+                            "Dirección": normalized_address
                         }
                     except Exception as e:
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": "No encontrado",
                             "Customer Name": "No encontrado",
-                            "Dirección": "Error normalizando dirección",
-                            "Depuración": "Error depurando dirección"
+                            "Dirección": "Error normalizando dirección"
                         }
                         st.error(f"Error procesando el archivo {uploaded_file.name}: {e}")
 
@@ -261,6 +259,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
