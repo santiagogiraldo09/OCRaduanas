@@ -50,7 +50,7 @@ def obtener_imagen_mapa(latitud, longitud):
     respuesta = requests.get(STATIC_MAP_URL, params=parametros)
     return Image.open(BytesIO(respuesta.content))
 
-def obtener_lugares_cercanos(latitud, longitud, tipo, radio=500):
+def obtener_lugares_cercanos(latitud, longitud, tipo, radio=50):
     parametros = {
         'location': f"{latitud},{longitud}",
         'radius': radio,  # Radio de búsqueda en metros
@@ -69,7 +69,7 @@ def categorizar_zona(latitud, longitud):
         "portuaria": "point_of_interest|establishment",
         "bodegas": "storage"
     }
-    radio_busqueda = 200  # Radio en metros
+    radio_busqueda = 201  # Radio en metros
     lugares_residenciales = obtener_lugares_cercanos(latitud, longitud, tipos['residencial'], radio_busqueda)
     lugares_portuarios = obtener_lugares_cercanos(latitud, longitud, tipos['portuaria'], radio_busqueda)
     lugares_bodegas = obtener_lugares_cercanos(latitud, longitud, tipos['bodegas'], radio_busqueda)
@@ -154,6 +154,7 @@ def comparar_coordenadas(coord1, coord2, umbral_metros=500):
     if None in coord1 or None in coord2:
         return False
     distancia = geodesic(coord1, coord2).meters
+    st.write(f"Distancia calculada entre coordenadas: {distancia} metros")  # Mostrar la distancia calculada
     return distancia <= umbral_metros
 
 # Función para guardar los resultados
@@ -234,8 +235,8 @@ def main():
 
         # Verificar similitud de coordenadas base comparando cada par de direcciones
         if len(coordenadas_base) > 1:
-            umbral_metros = 500
-            iguales = all(comparar_coordenadas(coordenadas_base[0], coord) for coord in coordenadas_base[1:])
+            umbral_metros = 500  # Incrementar el umbral
+            iguales = all(comparar_coordenadas(coordenadas_base[0], coord, umbral_metros) for coord in coordenadas_base[1:])
             if iguales:
                 st.success("Las direcciones base son similares.")
             else:
@@ -272,4 +273,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
