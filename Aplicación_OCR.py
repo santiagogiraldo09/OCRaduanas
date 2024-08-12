@@ -140,6 +140,20 @@ def normalize_address(address):
     address = re.sub(r'\s+', ' ', address).strip()
     return address
 
+# Función para extraer y normalizar la dirección base para comparación
+def normalize_address_for_comparison(address):
+    address = re.sub(r'\bOFICINA\b\s*\d*', '', address, flags=re.IGNORECASE)
+    address = re.sub(r'\bAPT\b\s*\d*', '', address, flags=re.IGNORECASE)
+    address = re.sub(r'\s+', ' ', address).strip()  # Eliminar espacios extra y normalizar
+    address = address.lower()  # Convertir a minúsculas para comparación uniforme
+    return address
+
+# Función para comparar direcciones base
+def compare_addresses(address1, address2):
+    normalized_address1 = normalize_address_for_comparison(address1)
+    normalized_address2 = normalize_address_for_comparison(address2)
+    return normalized_address1 == normalized_address2
+
 # Función para guardar los resultados
 def save_results(results, file_name="historico_documentos.xlsx"):
     df = pd.DataFrame(results)
@@ -166,7 +180,7 @@ def main():
 
     if st.button("Analizar documentos"):
         all_results = []
-        all_normalized_addresses = []
+        base_addresses = []
         direccion_rut = ""
         with st.spinner("Analizando..."):
             for uploaded_file, doc_type in [(rut_file, "RUT"), (cc_file, "Cámara de Comercio"), (cotizacion_file, "Cotizacion")]:
@@ -186,6 +200,8 @@ def main():
                                 direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
                         normalized_address = normalize_address(street_address)
+                        base_address = normalize_address_for_comparison(street_address)
+
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
@@ -202,17 +218,17 @@ def main():
                         st.error(f"Error procesando el archivo {uploaded_file.name}: {e}")
 
                     all_results.append(formatted_data)
-                    all_normalized_addresses.append(normalized_address)
+                    base_addresses.append(base_address)
 
         # Mostrar resultados
         df_results = pd.DataFrame(all_results)
         st.write(df_results)
 
-        # Verificar similitud de direcciones normalizadas
-        if len(set(all_normalized_addresses)) == 1:
-            st.success("Las direcciones son similares.")
+        # Verificar similitud de direcciones base
+        if len(set(base_addresses)) == 1:
+            st.success("Las direcciones base son similares.")
         else:
-            st.warning("Las direcciones no coinciden.")
+            st.warning("Las direcciones base no coinciden.")
 
         # Guardar y permitir descarga
         save_results(all_results)
