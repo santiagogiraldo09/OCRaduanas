@@ -50,7 +50,7 @@ def obtener_imagen_mapa(latitud, longitud):
     respuesta = requests.get(STATIC_MAP_URL, params=parametros)
     return Image.open(BytesIO(respuesta.content))
 
-def obtener_lugares_cercanos(latitud, longitud, tipo, radio=50):
+def obtener_lugares_cercanos(latitud, longitud, tipo, radio=500):
     parametros = {
         'location': f"{latitud},{longitud}",
         'radius': radio,  # Radio de búsqueda en metros
