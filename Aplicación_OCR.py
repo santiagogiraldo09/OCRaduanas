@@ -143,25 +143,25 @@ def clean_and_normalize_address(address):
         r'\b(DG|DIAG|DIAGONAL)\b'
     ]
 
-    # Buscar la primera aparición y reemplazarla con su forma estándar
+    first_occurrence = None
     for pattern in patterns:
         match = re.search(pattern, address, flags=re.IGNORECASE)
         if match:
-            first_occurrence = match.group(0)
-            address = re.sub(pattern, '', address, flags=re.IGNORECASE)  # Eliminar todas las apariciones
-            address = first_occurrence + ' ' + address  # Añadir la primera aparición al inicio
-            break  # Detener la búsqueda una vez que se ha encontrado y estandarizado la primera aparición
-    
+            if first_occurrence is None:
+                first_occurrence = match.group(0)  # Guardar la primera ocurrencia
+            address = re.sub(pattern, '', address, flags=re.IGNORECASE)  # Eliminar todas las ocurrencias
+
+    # Añadir la primera ocurrencia al inicio si existe
+    if first_occurrence:
+        address = first_occurrence + ' ' + address
+
     # Convertir todo a minúsculas para comparación uniforme
     address = address.lower()
-    
+
     # Eliminar espacios extra
     address = re.sub(r'\s+', ' ', address).strip()
 
     return address
-
-
-
 
 # Función para comparar coordenadas con un umbral de distancia
 def comparar_coordenadas(coord1, coord2, umbral_metros=900):
@@ -217,6 +217,7 @@ def main():
                             if doc_type == "RUT":
                                 direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
+                        # Normalizar la dirección
                         base_address = clean_and_normalize_address(street_address)
 
                         # Obtener coordenadas de la dirección normalizada
@@ -227,7 +228,7 @@ def main():
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
                             "Customer Name": data.get("CustomerName", "No encontrado") if 'data' in locals() else "No encontrado",
-                            "Dirección entrega": base_address,  # Añadimos la dirección depurada para compararla
+                            "Dirección entrega": base_address,  # Mostrar la dirección normalizada
                             "Latitud": lat,
                             "Longitud": lng
                         }
@@ -287,5 +288,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
