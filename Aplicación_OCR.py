@@ -95,7 +95,7 @@ def analyze_document(file_path, doc_type):
     document_data = {}
     if doc_type == "Cámara de Comercio":
         # Buscar la frase y extraer la dirección
-        target_text = "Dirección del domicilio"
+        target_text = "Dirección del domicilio principal:"
         for page in result.pages:
             for line in page.lines:
                 if target_text in line.content:
