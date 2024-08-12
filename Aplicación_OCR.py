@@ -83,15 +83,28 @@ def categorizar_zona(latitud, longitud):
         return "Zona desconocida"
 
 # Función para analizar el documento
-def analyze_document(file_path):
+def analyze_document(file_path, doc_type):
     document_analysis_client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
     with open(file_path, "rb") as f:
-        poller = document_analysis_client.begin_analyze_document("prebuilt-invoice", f)
+        if doc_type == "Cámara de Comercio":
+            poller = document_analysis_client.begin_analyze_document("prebuilt-layout", f)
+        else:
+            poller = document_analysis_client.begin_analyze_document("prebuilt-invoice", f)
         result = poller.result()
 
     document_data = {}
-    for field_name, field in result.documents[0].fields.items():
-        document_data[field_name] = field.value if field else "0"
+    if doc_type == "Cámara de Comercio":
+        # Buscar la frase y extraer la dirección
+        target_text = "Dirección del domicilio principal:"
+        for page in result.pages:
+            for line in page.lines:
+                if target_text in line.content:
+                    direccion_line = line.content.replace(target_text, "").strip()
+                    document_data["CustomerAddress"] = direccion_line
+                    break
+    else:
+        for field_name, field in result.documents[0].fields.items():
+            document_data[field_name] = field.value if field else "0"
     return document_data
 
 # Función para extraer la dirección completa
@@ -163,10 +176,10 @@ def main():
                         f.write(uploaded_file.getbuffer())
 
                     try:
+                        data = analyze_document(file_path, doc_type)
                         if doc_type == "Cámara de Comercio":
-                            street_address = "Carrera 63 B 32 E 25, Medellín, Antioquia"
+                            street_address = data.get("CustomerAddress", "No encontrado")
                         else:
-                            data = analyze_document(file_path)
                             address_value = data.get("CustomerAddress", "No encontrado")
                             street_address = extract_full_address(address_value)
                             if doc_type == "RUT":
@@ -230,3 +243,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
