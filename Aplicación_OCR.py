@@ -160,11 +160,8 @@ def clean_and_normalize_address(address):
 
     return address
 
-
-
-
 # Función para comparar coordenadas con un umbral de distancia
-def comparar_coordenadas(coord1, coord2, umbral_metros=900):
+def comparar_coordenadas(coord1, coord2, umbral_metros=500):
     if None in coord1 or None in coord2:
         return False
     distancia = geodesic(coord1, coord2).meters
@@ -217,6 +214,7 @@ def main():
                             if doc_type == "RUT":
                                 direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
+                        # Normalizar la dirección
                         base_address = clean_and_normalize_address(street_address)
 
                         # Obtener coordenadas de la dirección normalizada
@@ -249,7 +247,7 @@ def main():
 
         # Verificar similitud de coordenadas base comparando cada par de direcciones
         if len(coordenadas_base) > 1:
-            umbral_metros = 900  # Incrementar el umbral
+            umbral_metros = 500  # Incrementar el umbral
             iguales = all(comparar_coordenadas(coordenadas_base[0], coord, umbral_metros) for coord in coordenadas_base[1:])
             if iguales:
                 st.success("Las direcciones base son similares.")
@@ -287,5 +285,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
