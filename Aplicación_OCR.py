@@ -142,8 +142,8 @@ def normalize_address(address):
 
 # Función para extraer y normalizar la dirección base para comparación
 def normalize_address_for_comparison(address):
-    address = re.sub(r'\bOFICINA\b\s*\d*', '', address, flags=re.IGNORECASE)
-    address = re.sub(r'\bAPT\b\s*\d*', '', address, flags=re.IGNORECASE)
+    # Eliminar palabras clave como "OFICINA", "APT", etc., que puedan interferir con la comparación
+    address = re.sub(r'\b(OFICINA|APT|APARTAMENTO|PISO|DEPTO|INTERIOR)\b\s*\d*', '', address, flags=re.IGNORECASE)
     address = re.sub(r'\s+', ' ', address).strip()  # Eliminar espacios extra y normalizar
     address = address.lower()  # Convertir a minúsculas para comparación uniforme
     return address
@@ -206,14 +206,16 @@ def main():
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
                             "Customer Name": data.get("CustomerName", "No encontrado") if 'data' in locals() else "No encontrado",
-                            "Dirección": normalized_address
+                            "Dirección": normalized_address,
+                            "Depuración": base_address  # Añadimos la dirección depurada para compararla
                         }
                     except Exception as e:
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": "No encontrado",
                             "Customer Name": "No encontrado",
-                            "Dirección": "Error normalizando dirección"
+                            "Dirección": "Error normalizando dirección",
+                            "Depuración": "Error depurando dirección"
                         }
                         st.error(f"Error procesando el archivo {uploaded_file.name}: {e}")
 
