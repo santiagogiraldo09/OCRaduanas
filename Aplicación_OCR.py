@@ -234,7 +234,7 @@ def main():
 
         # Verificar similitud de coordenadas base comparando cada par de direcciones
         if len(coordenadas_base) > 1:
-            umbral_metros = 200
+            umbral_metros = 500
             iguales = all(comparar_coordenadas(coordenadas_base[0], coord) for coord in coordenadas_base[1:])
             if iguales:
                 st.success("Las direcciones base son similares.")
