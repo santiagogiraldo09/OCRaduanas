@@ -136,10 +136,8 @@ def clean_and_normalize_address(address):
     address = re.sub(r'\b(OFICINA|APT|APARTAMENTO|PISO|DEPTO|INTERIOR)\b\s*\d*', '', address, flags=re.IGNORECASE)
     
     # Paso 2: Normalizar la dirección
-    # Convertir diferentes abreviaciones de "Carrera" a "Carrera"
-    address = re.sub(r'\b(CRA|CRR|CR|CARR)\b', 'Carrera', address, flags=re.IGNORECASE)
-    # Convertir diferentes abreviaciones de "Calle" a "Calle"
-    address = re.sub(r'\b(CLL|CLL|CALLE)\b', 'Calle', address, flags=re.IGNORECASE)
+    # Convertir diferentes abreviaciones de "Carrera" y "Calle" a su forma estándar o eliminarlas
+    address = re.sub(r'\b(CRA|CRR|CR|CARR|CLL|CL)\b', '', address, flags=re.IGNORECASE)  # Eliminar "Carrera" y "Calle"
     
     # Convertir todo a minúsculas para comparación uniforme
     address = address.lower()
@@ -148,6 +146,7 @@ def clean_and_normalize_address(address):
     address = re.sub(r'\s+', ' ', address).strip()
 
     return address
+
 
 # Función para comparar coordenadas con un umbral de distancia
 def comparar_coordenadas(coord1, coord2, umbral_metros=900):
