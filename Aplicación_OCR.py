@@ -7,6 +7,7 @@ from io import BytesIO
 from PIL import Image
 import requests
 import os
+from geopy.distance import geodesic  # Para calcular la distancia entre dos coordenadas
 
 # Configuración de Azure Form Recognizer
 endpoint = "https://demoocr.cognitiveservices.azure.com/"
@@ -148,11 +149,12 @@ def clean_and_normalize_address(address):
 
     return address
 
-# Función para comparar direcciones base
-def compare_addresses(address1, address2):
-    cleaned_address1 = clean_and_normalize_address(address1)
-    cleaned_address2 = clean_and_normalize_address(address2)
-    return cleaned_address1 == cleaned_address2
+# Función para comparar coordenadas con un umbral de distancia
+def comparar_coordenadas(coord1, coord2, umbral_metros=100):
+    if None in coord1 or None in coord2:
+        return False
+    distancia = geodesic(coord1, coord2).meters
+    return distancia <= umbral_metros
 
 # Función para guardar los resultados
 def save_results(results, file_name="historico_documentos.xlsx"):
@@ -181,6 +183,7 @@ def main():
     if st.button("Analizar documentos"):
         all_results = []
         base_addresses = []
+        coordenadas_base = []
         direccion_rut = ""
         with st.spinner("Analizando..."):
             for uploaded_file, doc_type in [(rut_file, "RUT"), (cc_file, "Cámara de Comercio"), (cotizacion_file, "Cotizacion")]:
@@ -201,19 +204,23 @@ def main():
 
                         base_address = clean_and_normalize_address(street_address)
 
+                        # Obtener coordenadas de la dirección normalizada
+                        lat, lng = obtener_coordenadas(base_address)
+                        coordenadas_base.append((lat, lng))
+
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
                             "Customer Name": data.get("CustomerName", "No encontrado") if 'data' in locals() else "No encontrado",
-                            #"Dirección": street_address,
-                            "Dirección entrega": base_address  # Añadimos la dirección depurada para compararla
+                            "Dirección entrega": base_address,  # Añadimos la dirección depurada para compararla
+                            "Latitud": lat,
+                            "Longitud": lng
                         }
                     except Exception as e:
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": "No encontrado",
                             "Customer Name": "No encontrado",
-                            #"Dirección": "Error normalizando dirección",
                             "Depuración": "Error depurando dirección"
                         }
                         st.error(f"Error procesando el archivo {uploaded_file.name}: {e}")
@@ -225,11 +232,15 @@ def main():
         df_results = pd.DataFrame(all_results)
         st.write(df_results)
 
-        # Verificar similitud de direcciones base
-        if len(set(base_addresses)) == 1:
-            st.success("Las direcciones base son similares.")
+        # Verificar similitud de coordenadas base comparando cada par de direcciones
+        if len(coordenadas_base) > 1:
+            iguales = all(comparar_coordenadas(coordenadas_base[0], coord) for coord in coordenadas_base[1:])
+            if iguales:
+                st.success("Las direcciones base son similares.")
+            else:
+                st.warning("Las direcciones base no coinciden.")
         else:
-            st.warning("Las direcciones base no coinciden.")
+            st.info("No se puede comparar una única dirección.")
 
         # Guardar y permitir descarga
         save_results(all_results)
@@ -260,3 +271,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
