@@ -135,11 +135,22 @@ def clean_and_normalize_address(address):
     # Paso 1: Eliminar palabras clave no deseadas
     address = re.sub(r'\b(OFICINA|APT|APARTAMENTO|PISO|DEPTO|INTERIOR)\b\s*\d*', '', address, flags=re.IGNORECASE)
     
-    # Paso 2: Normalizar la dirección
-    # Estandarizar "Carrera", "Calle", etc.
-    address = re.sub(r'\b(CRA|CRR|CR|CARR)\b', 'Carrera', address, flags=re.IGNORECASE)
-    address = re.sub(r'\b(CLL|CL)\b', 'Calle', address, flags=re.IGNORECASE)
-    address = re.sub(r'\b(DG|DIAG|DIAGONAL)\b', 'Diagonal', address, flags=re.IGNORECASE)
+    # Paso 2: Mantener sólo la primera aparición de "Carrera", "Calle", etc., y eliminar las posteriores
+    patterns = [
+        r'\b(CRA|CRR|CR|CARR)\b',
+        r'\b(CLL|CL)\b',
+        r'\b(AV|AVENIDA|AVDA)\b',
+        r'\b(DG|DIAG|DIAGONAL)\b'
+    ]
+
+    # Buscar la primera aparición y reemplazarla con su forma estándar
+    for pattern in patterns:
+        match = re.search(pattern, address, flags=re.IGNORECASE)
+        if match:
+            first_occurrence = match.group(0)
+            address = re.sub(pattern, '', address, flags=re.IGNORECASE)  # Eliminar todas las apariciones
+            address = first_occurrence + ' ' + address  # Añadir la primera aparición al inicio
+            break  # Detener la búsqueda una vez que se ha encontrado y estandarizado la primera aparición
     
     # Convertir todo a minúsculas para comparación uniforme
     address = address.lower()
@@ -148,6 +159,7 @@ def clean_and_normalize_address(address):
     address = re.sub(r'\s+', ' ', address).strip()
 
     return address
+
 
 
 
