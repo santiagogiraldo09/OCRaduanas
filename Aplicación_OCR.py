@@ -252,9 +252,9 @@ def main():
         # Verificar similitud de coordenadas si hay más de una dirección base
         if len(coordenadas_base) > 1:
             if comparar_coordenadas(coordenadas_base[0], coordenadas_base[1]):
-                st.success("Las direcciones base son similares según las coordenadas.")
+                st.success("Direcciones similares según las coordenadas.")
             else:
-                st.warning("Las coordenadas de las direcciones base no coinciden.")
+                st.warning("Direcciones diferentes según coordenadas.")
         elif len(coordenadas_base) == 1:
             st.info("Sólo una dirección base encontrada.")
 
