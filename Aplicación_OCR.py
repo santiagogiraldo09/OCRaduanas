@@ -25,6 +25,39 @@ STATIC_MAP_URL = "https://maps.googleapis.com/maps/api/staticmap"
 # URL de la API de Places para buscar tipos de lugares cercanos
 PLACES_API_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
 
+# Función para eliminar palabras clave no deseadas y normalizar la dirección
+def clean_and_normalize_address(address):
+    # Paso 1: Eliminar palabras clave no deseadas
+    address = re.sub(r'\b(OFICINA|APT|APARTAMENTO|PISO|DEPTO|INTERIOR)\b\s*\d*', '', address, flags=re.IGNORECASE)
+    
+    # Paso 2: Mantener sólo la primera aparición de "Carrera", "Calle", etc., y eliminar las posteriores
+    patterns = [
+        r'\b(CRA|CRR|CR|CARR)\b',
+        r'\b(CLL|CL)\b',
+        r'\b(AV|AVENIDA|AVDA)\b',
+        r'\b(DG|DIAG|DIAGONAL)\b'
+    ]
+
+    first_occurrence = None
+    for pattern in patterns:
+        match = re.search(pattern, address, flags=re.IGNORECASE)
+        if match:
+            if first_occurrence is None:
+                first_occurrence = match.group(0)  # Guardar la primera ocurrencia
+            address = re.sub(pattern, '', address, flags=re.IGNORECASE)  # Eliminar todas las ocurrencias
+
+    # Añadir la primera ocurrencia al inicio si existe
+    if first_occurrence:
+        address = first_occurrence + ' ' + address
+
+    # Convertir todo a minúsculas para comparación uniforme
+    address = address.lower()
+
+    # Eliminar espacios extra
+    address = re.sub(r'\s+', ' ', address).strip()
+
+    return address
+
 def obtener_coordenadas(direccion):
     parametros = {
         'address': direccion,
@@ -130,39 +163,6 @@ def extract_full_address(address_value):
         address_parts.append(state)
     return ", ".join(address_parts)
 
-# Función para eliminar palabras clave no deseadas y normalizar la dirección
-def clean_and_normalize_address(address):
-    # Paso 1: Eliminar palabras clave no deseadas
-    address = re.sub(r'\b(OFICINA|APT|APARTAMENTO|PISO|DEPTO|INTERIOR)\b\s*\d*', '', address, flags=re.IGNORECASE)
-    
-    # Paso 2: Mantener sólo la primera aparición de "Carrera", "Calle", etc., y eliminar las posteriores
-    patterns = [
-        r'\b(CRA|CRR|CR|CARR)\b',
-        r'\b(CLL|CL)\b',
-        r'\b(AV|AVENIDA|AVDA)\b',
-        r'\b(DG|DIAG|DIAGONAL)\b'
-    ]
-
-    first_occurrence = None
-    for pattern in patterns:
-        match = re.search(pattern, address, flags=re.IGNORECASE)
-        if match:
-            if first_occurrence is None:
-                first_occurrence = match.group(0)  # Guardar la primera ocurrencia
-            address = re.sub(pattern, '', address, flags=re.IGNORECASE)  # Eliminar todas las ocurrencias
-
-    # Añadir la primera ocurrencia al inicio si existe
-    if first_occurrence:
-        address = first_occurrence + ' ' + address
-
-    # Convertir todo a minúsculas para comparación uniforme
-    address = address.lower()
-
-    # Eliminar espacios extra
-    address = re.sub(r'\s+', ' ', address).strip()
-
-    return address
-
 # Función para comparar coordenadas con un umbral de distancia
 def comparar_coordenadas(coord1, coord2, umbral_metros=200):
     if None in coord1 or None in coord2:
@@ -217,47 +217,45 @@ def main():
                             if doc_type == "RUT":
                                 direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
-                        # Normalizar la dirección
-                        base_address = clean_and_normalize_address(street_address)
-
-                        # Obtener coordenadas de la dirección normalizada
-                        lat, lng = obtener_coordenadas(base_address)
-                        coordenadas_base.append((lat, lng))
-
+                        # Normalizar la dirección antes de obtener las coordenadas
+                        normalized_address = clean_and_normalize_address(street_address)
+                        lat, lng = obtener_coordenadas(normalized_address)
+                        
+                        if lat and lng:
+                            coordenadas_base.append((lat, lng))
+                        
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
                             "Customer Name": data.get("CustomerName", "No encontrado") if 'data' in locals() else "No encontrado",
-                            "Dirección entrega": base_address,  # Mostrar la dirección normalizada
-                            "Latitud": lat,
-                            "Longitud": lng
+                            "Dirección": normalized_address,  # Mostrar la dirección normalizada
+                            "Coordenadas": f"{lat}, {lng}" if lat and lng else "Coordenadas no encontradas"
                         }
                     except Exception as e:
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": "No encontrado",
                             "Customer Name": "No encontrado",
-                            "Depuración": "Error depurando dirección"
+                            "Dirección": "Error normalizando dirección",
+                            "Coordenadas": "Error obteniendo coordenadas"
                         }
                         st.error(f"Error procesando el archivo {uploaded_file.name}: {e}")
 
                     all_results.append(formatted_data)
-                    base_addresses.append(base_address)
+                    base_addresses.append(normalized_address)
 
         # Mostrar resultados
         df_results = pd.DataFrame(all_results)
         st.write(df_results)
 
-        # Verificar similitud de coordenadas base comparando cada par de direcciones
+        # Verificar similitud de coordenadas si hay más de una dirección base
         if len(coordenadas_base) > 1:
-            umbral_metros = 200  # Incrementar el umbral
-            iguales = all(comparar_coordenadas(coordenadas_base[0], coord, umbral_metros) for coord in coordenadas_base[1:])
-            if iguales:
-                st.success("Las direcciones base son similares.")
+            if comparar_coordenadas(coordenadas_base[0], coordenadas_base[1]):
+                st.success("Las direcciones base son similares según las coordenadas.")
             else:
-                st.warning("Las direcciones base no coinciden.")
-        else:
-            st.info("No se puede comparar una única dirección.")
+                st.warning("Las coordenadas de las direcciones base no coinciden.")
+        elif len(coordenadas_base) == 1:
+            st.info("Sólo una dirección base encontrada.")
 
         # Guardar y permitir descarga
         save_results(all_results)
@@ -276,7 +274,8 @@ def main():
 
         if st.button("Confirmar y Categorizar"):
             if direccion_editada:
-                lat, lng = obtener_coordenadas(direccion_editada)
+                direccion_editada_normalizada = clean_and_normalize_address(direccion_editada)
+                lat, lng = obtener_coordenadas(direccion_editada_normalizada)
                 if lat and lng:
                     st.write(f"Coordenadas: {lat}, {lng}")
                     imagen = obtener_imagen_mapa(lat, lng)
@@ -288,6 +287,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
