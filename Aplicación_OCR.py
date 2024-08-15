@@ -199,13 +199,14 @@ def main():
                             if doc_type == "RUT":
                                 direccion_rut = street_address  # Guardar la dirección del RUT para editar
 
+                        normalized_address = normalize_address(street_address)
                         base_address = clean_and_normalize_address(street_address)
 
                         formatted_data = {
                             "Document Type": doc_type,
                             "Vendor Name": data.get("VendorName", "No encontrado") if 'data' in locals() else "No encontrado",
                             "Customer Name": data.get("CustomerName", "No encontrado") if 'data' in locals() else "No encontrado",
-                            "Dirección": street_address,
+                            "Dirección": normalized_address,
                             "Depuración": base_address  # Añadimos la dirección depurada para compararla
                         }
                     except Exception as e:
@@ -260,3 +261,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
