@@ -39,7 +39,6 @@ def clean_and_normalize_address(address):
     address = re.sub(r'\b(DG|DIAG|DIAGONAL)\b', 'Diagonal', address, flags=re.IGNORECASE)
 
     # Paso 3: Eliminar referencias duplicadas (solo dejar la primera ocurrencia)
-    # Ejemplo: Si una dirección tiene "Carrera 63B Calle 32A", el resultado será "Carrera 63B 32A"
     address_parts = address.split()
     primary_type = None
     normalized_address = []
@@ -216,7 +215,8 @@ def main():
                             address_value = data.get("CustomerAddress", "No encontrado")
                             street_address = extract_full_address(address_value)
                             if doc_type == "RUT":
-                                direccion_rut = street_address  # Guardar la dirección del RUT para editar
+                                # Normalizar la dirección del RUT para categorizar
+                                direccion_rut = clean_and_normalize_address(street_address)
 
                         # Normalizar la dirección antes de obtener las coordenadas
                         normalized_address = clean_and_normalize_address(street_address)
@@ -252,9 +252,9 @@ def main():
         # Verificar similitud de coordenadas si hay más de una dirección base
         if len(coordenadas_base) > 1:
             if comparar_coordenadas(coordenadas_base[0], coordenadas_base[1]):
-                st.success("Direcciones iguales según las coordenadas.")
+                st.success("Las direcciones base son similares según las coordenadas.")
             else:
-                st.warning("Direcciones diferentes según las coordenadas.")
+                st.warning("Las coordenadas de las direcciones base no coinciden.")
         elif len(coordenadas_base) == 1:
             st.info("Sólo una dirección base encontrada.")
 
