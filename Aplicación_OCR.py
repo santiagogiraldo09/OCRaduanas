@@ -10,11 +10,11 @@ import os
 from geopy.distance import geodesic  # Para calcular la distancia entre dos coordenadas
 
 # Configuración de Azure Form Recognizer
-endpoint = "https://demoocr.cognitiveservices.azure.com/"
-key = "125c4bac6511481290029459b6cf96c2"
+endpoint = "YPUR-ENDPOINT"
+key = "YOUR-KEY"
 
 # Clave de API de Google Maps
-API_KEY = 'AIzaSyAup1kQpy0W1gyaWOY2IoUl9VAHP_7pxYI'
+API_KEY = 'YOUR-API-KEY'
 
 # URL de la API de Geocoding
 GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
