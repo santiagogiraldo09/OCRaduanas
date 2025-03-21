@@ -17,13 +17,13 @@ key = "YOUR-KEY"
 API_KEY = 'YOUR-API-KEY'
 
 # URL de la API de Geocoding
-GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json"
+GEOCODING_URL = ""
 
 # URL de la API de Static Maps
-STATIC_MAP_URL = "https://maps.googleapis.com/maps/api/staticmap"
+STATIC_MAP_URL = ""
 
 # URL de la API de Places para buscar tipos de lugares cercanos
-PLACES_API_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+PLACES_API_URL = ""
 
 # Función para eliminar palabras clave no deseadas y normalizar la dirección
 def clean_and_normalize_address(address):
